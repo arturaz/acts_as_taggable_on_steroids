@@ -41,15 +41,9 @@ class TagList < Array
   def to_s
     clean!
     
-    list = map do |name|
-      if delimiter.is_a?(Regexp)
-        name.match(delimiter) ? "\"#{name}\"" : name
-      else
-        name.include?(delimiter) ? "\"#{name}\"" : name
-      end
-    end
-    
-    list.join( delimiter.is_a?(Regexp) ? "#{delimiter.source.match(/[^\\\[\]\*\?\{\}\.\|]/)[0]} " : (delimiter.ends_with?(" ") ? delimiter : "#{delimiter} ") )
+    map do |name|
+      name.include?(delimiter) ? "\"#{name}\"" : name
+    end.join(delimiter.ends_with?(" ") ? delimiter : "#{delimiter} ")
   end
   
  private
@@ -78,11 +72,16 @@ class TagList < Array
     #   tag_list # ["One", "Two", "Three"]
     def from(string)
       returning new do |tag_list|
-        string = string.to_s.gsub('.', '').dup
-        
+        string = string.to_s.dup
+        d = delimiter
+
         # Parse the quoted tags
-        string.gsub!(/"(.*?)"\s*#{delimiter}?\s*/) { tag_list << $1; "" }
-        string.gsub!(/'(.*?)'\s*#{delimiter}?\s*/) { tag_list << $1; "" }
+        [
+          /\s*#{d}\s*(['"])(.*?)\1\s*/,
+          /^\s*(['"])(.*?)\1\s*#{d}?/
+        ].each do |re|
+          string.gsub!(re) { tag_list << $2; "" }
+        end
         
         tag_list.add(string.split(delimiter))
       end

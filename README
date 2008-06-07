@@ -129,12 +129,6 @@ If you want to change the delimiter used to parse and present tags, set TagList.
 For example, to use spaces instead of commas, add the following to config/environment.rb:
 
   TagList.delimiter = " "
-  
-You can also use a regexp as delimiter:
-
-  TagList.delimiter = /,|;/
-  
-The above code would parse the string and use ',' and ';' as delimiters.
 
 === Unused tags
 
@@ -142,6 +136,38 @@ Set Tag.destroy_unused to remove tags when they are no longer being
 used to tag any objects. Defaults to false.
 
   Tag.destroy_unused = true
+
+=== Slugizing
+
+Usually (esp. not in English) user can tag same thing with differently 
+written words. For example if he wants to tag post with 'racing' he might
+write this as 'Racing' or 'racing'. The problem gets even bigger when 
+non-english letters are used because user can decide he will write latin 
+counterpart of that word (as in my case of Lithuanian language).
+
+So here it is - slugizer!
+
+Slugizer is a simple piece of code which gets tag name (e.g. Racing cars) and
+transforms it in some way (e.g. to racing-cars).
+
+The default slugizer just returns tag name he was provided. If you want 
+something more useful you can use this piece of code (put it into 
+_environment.rb_):
+
+  ActsAsTaggableOnSteroids.slugizer = Proc.new do |name|
+    name.gsub(%r{([^a-z0-9]|-)+}i, '-').gsub(%r{^-?(.*?)-?$}, '\1').downcase
+  end
+
+This slugizer replaces all nonalphabetic chars except dashes into dashes and
+removes multiple dashes so "My (baby) girl got born!" would become 
+"my-baby-girl-got-born".
+
+*IMPORTANT*
+
+If you're upgrading (been using older version without tag support) you need
+to upgrade your database. Use 
+`ruby script/generate acts_as_taggable_slug_upgrade` and `rake db:migrate` to
+do that.
 
 === Other
 

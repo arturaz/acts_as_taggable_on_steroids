@@ -7,13 +7,18 @@ class Tag < ActiveRecord::Base
   cattr_accessor :destroy_unused
   self.destroy_unused = false
   
-  # LIKE is used for cross-database case-insensitivity
   def self.find_or_create_with_like_by_name(name)
-    find(:first, :conditions => ["name LIKE ?", name]) || create(:name => name)
+    slug = ActsAsTaggableOnSteroids.slugizer.call(name)
+    find(:first, :conditions => ["slug=?", slug]) || create(:name => name)
   end
-  
+
+  before_save :make_slug
+  def make_slug
+    self.slug = ActsAsTaggableOnSteroids.slugizer.call(self.name)
+  end
+
   def ==(object)
-    super || (object.is_a?(Tag) && name == object.name)
+    super || (object.is_a?(Tag) && slug == object.slug)
   end
   
   def to_s

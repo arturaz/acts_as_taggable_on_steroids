@@ -24,7 +24,28 @@ class TagTest < Test::Unit::TestCase
   def test_to_s
     assert_equal tags(:good).name, tags(:good).to_s
   end
-  
+
+  def test_default_slugizer
+    name = "Foobar has left the building"
+    t = Tag.new(:name => name)
+    t.save
+    assert_equal name, t.slug
+  end
+
+  def test_custom_slugizer
+    old_slugizer = ActsAsTaggableOnSteroids.slugizer
+    ActsAsTaggableOnSteroids.slugizer = Proc.new do |name|
+      name.gsub(%r{([^a-z0-9]|-)+}i, '-').gsub(%r{^-?(.*?)-?$}, '\1') \
+        .downcase
+    end
+
+    name = "My (baby) girl got born!"
+    t = Tag.new(:name => name)
+    t.save
+    assert_equal 'my-baby-girl-got-born', t.slug
+    ActsAsTaggableOnSteroids.slugizer = old_slugizer
+  end 
+
   def test_equality
     assert_equal tags(:good), tags(:good)
     assert_equal Tag.find(1), Tag.find(1)

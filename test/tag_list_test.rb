@@ -41,15 +41,18 @@ class TagListTest < Test::Unit::TestCase
   def test_from_multiple_tags_with_quote_and_commas
     assert_equivalent ['Alpha, Beta', 'Delta', 'Gamma, something'], TagList.from('"Alpha, Beta", Delta, "Gamma, something"')
   end
+
+  def test_from_taglist_with_inner_quotes
+    assert_equivalent ["House", "Drum'n'Bass", "Trance"], TagList.from("House, Drum'n'Bass, Trance")
+  end
+
+  def test_from_taglist_with_inner_quotes_concentation_bug
+    assert_equivalent ["bar baz, boo", "foo", "bee"], TagList.from("foo, 'bar baz, boo', bee")
+  end
   
   def test_from_removes_white_space
     assert_equivalent %w(Alpha Beta), TagList.from('" Alpha   ", "Beta  "')
     assert_equivalent %w(Alpha Beta), TagList.from('  Alpha,  Beta ')
-  end
-
-  def test_from_removes_dots
-    assert_equivalent %w(Alpha Beta), TagList.from('Alpha., Beta')
-    assert_equivalent %w(Alpha Beta), TagList.from('Alpha, Be.ta')
   end
   
   def test_alternative_delimiter
