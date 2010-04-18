@@ -136,7 +136,12 @@ module ActiveRecord #:nodoc:
         
        private
         def tags_condition(tags, table_name = Tag.table_name)
-          condition = tags.map { |t| sanitize_sql(["#{table_name}.name LIKE ?", t]) }.join(" OR ")
+          condition = tags.map do |t|
+            sanitize_sql([
+                "#{table_name}.slug=?",
+                ActsAsTaggableOnSteroids.slugizer.call(t)
+              ])
+          end.join(" OR ")
           "(" + condition + ")"
         end
       end
